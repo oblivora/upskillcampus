@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Shortener</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  h1 { margin-bottom: 4px; }
+  input[type="text"] { width: 400px; padding: 4px; margin-right: 6px; }
+  button { padding: 5px 12px; cursor: pointer; }
+  .error { color: red; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  th { background: #f0f0f0; }
+  hr { margin: 16px 0; }
+  #resultBox { display: none; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>URL Shortener</h1>
+<p>Paste a long link to get a short URL.</p>
+<hr>
+
+<div>
+  <input type="text" id="urlInput" placeholder="https://example.com/very/long/url..." />
+  <button onclick="shortenURL()">Shorten</button>
+</div>
+<p class="error" id="errorMsg"></p>
+
+<div id="resultBox">
+  <strong>Short URL:</strong>
+  <span id="shortUrl"></span>
+  <button onclick="copyURL()">Copy</button>
+</div>
+
+<h2>Recent URLs</h2>
+<div id="urlList"></div>
+
+<script>
+  async function shortenURL() {
+    const url = document.getElementById('urlInput').value.trim();
+    document.getElementById('errorMsg').textContent = '';
+    if (!url) { document.getElementById('errorMsg').textContent = 'Please enter a URL.'; return; }
+    const res = await fetch('/api/shorten', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({url}) });
+    const data = await res.json();
+    if (data.error) { document.getElementById('errorMsg').textContent = data.error; return; }
+    document.getElementById('shortUrl').textContent = data.short_url;
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('urlInput').value = '';
+    loadHistory();
+  }
+
+  async function loadHistory() {
+    const res = await fetch('/api/urls');
+    const urls = await res.json();
+    const list = document.getElementById('urlList');
+    if (!urls.length) { list.innerHTML = '<p>No URLs yet.</p>'; return; }
+    list.innerHTML = '<table><thead><tr><th>Original URL</th><th>Short Code</th><th>Clicks</th></tr></thead><tbody>' +
+      urls.map(u => `<tr>
+        <td><a href="${u.original_url}" target="_blank">${u.original_url}</a></td>
+        <td>/s/${u.short_code}</td>
+        <td>${u.clicks}</td>
+      </tr>`).join('') + '</tbody></table>';
+  }
+
+  function copyURL() {
+    navigator.clipboard.writeText(document.getElementById('shortUrl').textContent);
+    alert('Copied!');
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') shortenURL(); });
+  loadHistory();
+</script>
+</body>
+</html>
