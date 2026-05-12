@@ -30,7 +30,7 @@ This repository contains the final project submission for the **Free Summer Inte
     ```
 
 ## 👨‍💻 Author
-**Aman Kumar**
+**Kumar Aman**
 * GitHub: [@oblivora](https://github.com/oblivora)
 
 ## 🎓 Acknowledgments
